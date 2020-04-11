@@ -1,0 +1,142 @@
+---
+- name: Create first instance
+  hosts: localhost
+  gather_facts: no
+
+  vars:
+          vm_name: mysite
+          project_name: drylabin
+          auth_method: serviceaccount
+          sa_key_file: ~/drylabin.json
+          zone: us-east1-b
+          region: us-east1
+
+  tasks:
+   - name: Create a disk
+     gcp_compute_disk:
+         name: "{{ vm_name }}"
+         size_gb: 10
+         source_image: 'projects/debian-cloud/global/images/family/debian-9'
+         zone: "{{ zone }}"
+         project: "{{project_name}}"
+         auth_kind: "{{ auth_method }}"
+         service_account_file: "{{ sa_key_file }}"
+         scopes:
+                 - https://www.googleapis.com/auth/compute
+         state: present
+     register: disk
+   - name: Create an instance
+     gcp_compute_instance:
+         name: "{{ vm_name }}"
+         machine_type: "f1-micro"
+         disks:
+                 - auto_delete: true
+                   boot: true
+                   source: "{{ disk }}"
+         network_interfaces:
+                 - access_configs:
+                           - name: 'External NAT'
+                             type: 'ONE_TO_ONE_NAT'
+         zone: "{{ zone }}"
+         project: "{{ project_name }}"
+         auth_kind: "{{ auth_method }}"
+         service_account_file: "{{ sa_key_file }}"
+         scheduling:
+                 preemptible: no
+         state: present
+         scopes:
+                 - https://www.googleapis.com/auth/compute
+     register: instance
+
+   - name: Get address of the instance
+     set_fact:
+             address: "{{ instance.networkInterfaces[0].accessConfigs[0].natIP }}"
+
+   - name: Print the address of the instance
+     debug:
+             var: address
+             
+   - name: Wait for SSH to come up  
+     wait_for: host={{ address }} port=22 delay=10 timeout=60
+
+   - name: Add host to groupname
+     add_host: hostname={{ address }} groupname=new_instances
+
+- name: Manage new instances
+  hosts: new_instances
+  become: yes
+
+  tasks:
+          - name: Update apt-cache
+            apt: update_cache=yes
+
+          - name: Installing the softwares
+            apt:
+                    pkg:
+                            - python3-dev
+                            - python3-pip
+                            - nginx
+                    state: present
+
+          - name: Installing pip software
+            pip:
+                    name:
+                            - virtualenv
+                            - uwsgi
+                    executable: pip3
+
+          - name: Installing in virtualenv
+            pip:
+                    name: django
+                    virtualenv: /home/pi/mysite
+
+          - name: Installing nginx configuration file
+            copy:
+                    src: myproject_nginx.conf
+                    dest: /etc/nginx/sites-available
+
+          - name: Linking the configuration in enable site
+            file:
+                    src: /etc/nginx/sites-available/myproject_nginx.conf
+                    dest: /etc/nginx/sites-enabled/myproject_nginx.conf
+                    state: link
+
+          - name: Copy a uwsgi ini file
+            copy:
+                    src: mysite_uwsgi.ini
+                    dest: /home/pi/mysite
+
+          - name: Untar django project file
+            unarchive:
+                    src: djangoproject.tgz
+                    dest: /home/pi/mysite
+
+          - name: Copy uwsgi_params file
+            copy:
+                    src: /etc/nginx/uwsgi_params
+                    dest: /home/pi/mysite
+                    remote_src: yes
+
+          - name: Recursively change ownership of /home/pi/mysite
+            file:
+                    path: /home/pi/mysite
+                    state: directory
+                    recurse: yes
+                    owner: pi
+                    group: pi
+
+          - name: Create a directory for uwsgi emperor
+            file:
+                    path: /etc/uwsgi/vassals
+                    state: directory
+
+          - name: Linking the uwsgi ini file in vassals
+            file:
+                    src: /home/pi/mysite/mysite_uwsgi.ini
+                    dest: /etc/uwsgi/vassals/mysite_uwsgi.ini
+                    state: link
+
+          - name: Copy the service file
+            copy:
+                    src: uwsgi.service
+                    dest: /etc/systemd/system

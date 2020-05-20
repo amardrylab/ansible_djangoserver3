@@ -110,11 +110,19 @@
                     dest: /etc/nginx/sites-enabled/myproject_nginx.conf
                     state: link
 
-          - name: Creating a directory mysite in home/pi
+          - name: Installing uwsgi
+            shell: pip3 install uwsgi
+
+          - name: Installing virtualenv
+            shell: pip3 install virtualenv
+
+          - name: Installing setuptools
+            shell: pip3 install setuptools
+
+          - name: Creating directory mysite 
             file:
                     path: /home/pi/mysite
                     state: directory
-
 
           - name: Copy a uwsgi ini file
             copy:

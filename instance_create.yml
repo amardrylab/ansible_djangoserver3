@@ -4,7 +4,7 @@
   gather_facts: no
 
   vars:
-          vm_name: mysite
+          vm_name: myproject
           project_name: drylabin
           auth_method: serviceaccount
           sa_key_file: ~/drylabin.json
@@ -119,25 +119,25 @@
           - name: Installing setuptools
             shell: pip3 install setuptools
 
-          - name: Creating directory mysite 
+          - name: Creating directory myproject 
             file:
-                    path: /home/pi/mysite
+                    path: /home/pi/myproject
                     state: directory
 
           - name: Copy a uwsgi ini file
             copy:
-                    src: mysite_uwsgi.ini
-                    dest: /home/pi/mysite
+                    src: myproject_uwsgi.ini
+                    dest: /home/pi/myproject
 
           - name: Copy uwsgi_params file
             copy:
                     src: /etc/nginx/uwsgi_params
-                    dest: /home/pi/mysite
+                    dest: /home/pi/myproject
                     remote_src: yes
 
-          - name: Recursively change ownership of /home/pi/mysite
+          - name: Recursively change ownership of /home/pi/myproject
             file:
-                    path: /home/pi/mysite
+                    path: /home/pi/myproject
                     state: directory
                     recurse: yes
                     owner: pi
@@ -150,8 +150,8 @@
 
           - name: Linking the uwsgi ini file in vassals
             file:
-                    src: /home/pi/mysite/mysite_uwsgi.ini
-                    dest: /etc/uwsgi/vassals/mysite_uwsgi.ini
+                    src: /home/pi/myproject/myproject_uwsgi.ini
+                    dest: /etc/uwsgi/vassals/myproject_uwsgi.ini
                     state: link
 
           - name: Copy the service file

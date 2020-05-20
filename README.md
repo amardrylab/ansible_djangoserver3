@@ -14,15 +14,15 @@ ssh www.drylab.in
 
 ## Fourth Create a virtual environment
 
-virtualenv mysite
+virtualenv myproject
 
 ## Fifth Activate the virtual environment
 
-source mysite/bin/activate
+source myproject/bin/activate
 
 ## Sixth Change directory
 
-cd mysite
+cd myproject
 
 ## Seventh Install Django
 
@@ -30,9 +30,9 @@ pip install django
 
 ## Eighth Create and new Project
 
-django-admin startproject mysite .
+django-admin startproject myproject .
 
-## Nineth Put your website name in the mysite/setting.py
+## Nineth Put your website name in the myproject/setting.py
 
 ALLOWED_HOST = ['www.drylab.in']
 

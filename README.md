@@ -5,8 +5,8 @@ git clone https://github.com/amardrylab/ansible_djangoserver3.git
 
 ## Second run the code in your local machine
 
-cd ansible_djangoserver3
-ansible-playbook instance_djangoserver.yml
+-cd ansible_djangoserver3
+-ansible-playbook instance_djangoserver.yml
 
 ## Third login to your remote server
 
@@ -38,5 +38,5 @@ ALLOWED_HOST = ['www.drylab.in']
 
 ## Tenth Restart the nginx and uwsgi
 
-sudo service nginx restart
-sudo service uwsgi restart
+-sudo service nginx restart
+-sudo service uwsgi restart

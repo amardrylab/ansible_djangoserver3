@@ -94,21 +94,10 @@
           - name: Installing the softwares
             apt:
                     pkg:
-                            - python-dev
-                            - python-pip
+                            - python3-dev
+                            - python3-pip
                             - nginx
                     state: present
-
-          - name: Installing pip software
-            pip:
-                    name:
-                            - virtualenv
-                            - uwsgi
-
-          - name: Installing in virtualenv
-            pip:
-                    name: django
-                    virtualenv: /home/pi/mysite
 
           - name: Installing nginx configuration file
             copy:
@@ -121,14 +110,15 @@
                     dest: /etc/nginx/sites-enabled/myproject_nginx.conf
                     state: link
 
+          - name: Creating a directory mysite in home/pi
+            file:
+                    path: /home/pi/mysite
+                    state: directory
+
+
           - name: Copy a uwsgi ini file
             copy:
                     src: mysite_uwsgi.ini
-                    dest: /home/pi/mysite
-
-          - name: Untar django project file
-            unarchive:
-                    src: djangoproject.tgz
                     dest: /home/pi/mysite
 
           - name: Copy uwsgi_params file
